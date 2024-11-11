@@ -287,8 +287,157 @@ This approach allows xjc to run as part of your Maven build process, which is a 
 --- https://github.com/eclipse-ee4j/jaxb-ri/releases
 
 
+===========================
+When using a WSDL file instead of an XSD file with the jaxb2-maven-plugin, you need to set up the plugin to recognize the WSDL format specifically. Here are steps to address this, including generating schema files from a WSDL if needed.
+
+1. Configuring jaxb2-maven-plugin for WSDL Files
+Update your pom.xml to configure the plugin to handle a WSDL file directly by specifying the wsdl configuration parameter:
+
+xml
+Copy code
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>jaxb2-maven-plugin</artifactId>
+            <version>2.5.0</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>xjc</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <packageName>com.example.chequereader</packageName>
+                <wsdlFiles>
+                    <wsdlFile>${project.basedir}/src/main/resources/wsdl/WSMonetaryInstrument.wsdl</wsdlFile>
+                </wsdlFiles>
+                <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+2. Validate the WSDL File
+Ensure the WSDL file path is correct and that the WSDL is accessible at src/main/resources/wsdl/WSMonetaryInstrument.wsdl. If there are issues with the WSDL (e.g., if it’s missing or incorrectly formatted), this can cause xjc to fail.
+
+3. Ensure Dependencies for JAXB Plugins (Java 17+)
+In Java 17 and beyond, JAXB is no longer part of the JDK. So, you’ll need to add JAXB API and runtime dependencies explicitly in your pom.xml:
+
+xml
+Copy code
+<dependencies>
+    <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>3.0.1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.glassfish.jaxb</groupId>
+        <artifactId>jaxb-runtime</artifactId>
+        <version>3.0.2</version>
+    </dependency>
+</dependencies>
+4. Generating XSD Schema from WSDL (If Needed)
+If the plugin still fails, you might be able to convert the WSDL into an XSD and then point the plugin to the XSD file.
+
+Extract the XSD: If you have tools like Apache CXF installed, you can use the following command to extract schemas from a WSDL:
+
+sh
+Copy code
+wsdl2java -d <output_directory> -client -wsdlLocation <path_to_wsdl_file>
+Alternatively, Eclipse IDE has options to generate schema files from WSDL within the Web Services tools.
+
+Use the Generated XSD: Point the jaxb2-maven-plugin to the generated XSD file instead of the WSDL.
+
+5. Run the Maven Build
+After making these changes, try running the build again:
+
+sh
+Copy code
+mvn clean install
+This should trigger the JAXB code generation process, producing Java classes from your WSDL or XSD for your SOAP request and response. Let me know if this resolves the issue!
 
 
+==============================
+To use wsdl2java, you can use Apache CXF, a popular framework for working with SOAP and WSDLs in Java. Here’s how to set up and run wsdl2java in your IntelliJ project:
+
+1. Add Apache CXF Plugin Dependency (wsdl2java) in Maven
+Add Apache CXF as a dependency in your pom.xml to gain access to the wsdl2java tool.
+
+xml
+Copy code
+<dependencies>
+    <!-- Add other dependencies here -->
+
+    <!-- Apache CXF Dependency for SOAP and WSDL -->
+    <dependency>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-tools-wsdlto-core</artifactId>
+        <version>3.5.5</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-tools-wsdlto-databinding-jaxb</artifactId>
+        <version>3.5.5</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-tools-common</artifactId>
+        <version>3.5.5</version>
+    </dependency>
+</dependencies>
+Replace 3.5.5 with the latest version if needed.
+
+2. Run wsdl2java with Maven or CLI
+You can either use the command line or set up a Maven plugin to automatically generate classes from WSDL files.
+
+Option A: Run wsdl2java from Command Line
+Once Apache CXF is added, you can run the wsdl2java command from the command line:
+
+sh
+Copy code
+mvn org.apache.cxf:cxf-tools-wsdlto-databinding-jaxb:3.5.5:wsdl2java -DwsdlLocation=<path_to_wsdl>
+Replace <path_to_wsdl> with the path to your WSDL file, for example, src/main/resources/wsdl/WSMonetaryInstrument.wsdl.
+
+Option B: Configure wsdl2java as a Maven Plugin in pom.xml
+To automatically run wsdl2java as part of your build process, add the following to the <build> section of your pom.xml:
+
+xml
+Copy code
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-codegen-plugin</artifactId>
+            <version>3.5.5</version>
+            <executions>
+                <execution>
+                    <id>generate-sources</id>
+                    <phase>generate-sources</phase>
+                    <goals>
+                        <goal>wsdl2java</goal>
+                    </goals>
+                    <configuration>
+                        <wsdlOptions>
+                            <wsdlOption>
+                                <wsdl>${project.basedir}/src/main/resources/wsdl/WSMonetaryInstrument.wsdl</wsdl>
+                                <extraargs>
+                                    <extraarg>-p</extraarg>
+                                    <extraarg>com.example.chequereader</extraarg>
+                                </extraargs>
+                            </wsdlOption>
+                        </wsdlOptions>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+Now, when you run mvn clean install, wsdl2java will generate Java classes from your WSDL file automatically.
+
+3. Check the Generated Classes
+The generated classes will appear in the target/generated-sources folder. You can then use them directly in your Spring Boot application to create SOAP requests and parse responses.
 
 
 
