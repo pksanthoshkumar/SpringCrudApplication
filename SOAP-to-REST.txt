@@ -284,6 +284,9 @@ Copy code
 mvn clean install
 This approach allows xjc to run as part of your Maven build process, which is a good solution when working with Java 17.
 
+--- https://github.com/eclipse-ee4j/jaxb-ri/releases
+
+
 
 
 
