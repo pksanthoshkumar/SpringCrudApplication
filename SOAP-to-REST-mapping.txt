@@ -1,0 +1,150 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>cheque-reading-app</artifactId>
+    <version>1.0.0</version>
+    <dependencies>
+        <!-- Spring Boot Starter Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Apache CXF for SOAP -->
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
+        </dependency>
+
+        <!-- JAXB for XML Processing -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <!-- JAXB Runtime -->
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+----------------------------------
+package com.example.chequereadingapp.domain;
+
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "requestHeader")
+public class RequestHeader {
+    private String requestId;
+    private User requestUser;
+    private String originatingService;
+
+    @XmlElement(name = "requestId")
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
+
+    @XmlElement(name = "requestUser")
+    public User getRequestUser() { return requestUser; }
+    public void setRequestUser(User requestUser) { this.requestUser = requestUser; }
+
+    @XmlElement(name = "originatingService")
+    public String getOriginatingService() { return originatingService; }
+    public void setOriginatingService(String originatingService) { this.originatingService = originatingService; }
+}
+----------------------------
+package com.example.chequereadingapp.domain;
+
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import java.util.List;
+
+@XmlRootElement(name = "requestUser")
+public class User {
+
+}
+-----------------------------
+package com.example.chequereadingapp.domain;
+
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "item")
+public class UserDataItem {
+
+}
+-------------------------
+package com.example.chequereadingapp.domain;
+
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "getCheckImageRequest")
+public class CheckImageRequest {
+
+}
+----------------
+package com.example.chequereadingapp.domain;
+
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "accountData")
+public class AccountData {
+
+}
+------------------------
+package com.example.chequereadingapp.service;
+
+import com.example.chequereadingapp.domain.CheckImageRequest;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CheckImageService {
+    public String getCheckImage(CheckImageRequest request) {
+        // Process request and retrieve cheque images here
+        return "Cheque image for " + request.getDocumentImageNumber();
+    }
+}
+--------------------
+package com.example.chequereadingapp.controller;
+
+import com.example.chequereadingapp.domain.CheckImageRequest;
+import com.example.chequereadingapp.service.CheckImageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+import java.io.StringReader;
+
+@RestController
+@RequestMapping("/soap")
+public class CheckImageController {
+
+    @Autowired
+    private CheckImageService checkImageService;
+
+    @PostMapping(value = "/getCheckImage", consumes = "application/xml", produces = "application/xml")
+    public String getCheckImage(@RequestBody String xmlRequest) throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(CheckImageRequest.class);
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+
+        CheckImageRequest request = (CheckImageRequest) unmarshaller.unmarshal(new StreamSource(new StringReader(xmlRequest)));
+        return checkImageService.getCheckImage(request);
+    }
+}
+-------------------
