@@ -220,3 +220,73 @@ Copy code
     </plugins>
 </build>
 Replace schema.xsd with your WSDL or XSD file. Then, running mvn clean install will automatically generate the classes for you.
+
+=================
+As of Java 11 and later (including Java 17), xjc is no longer included in the JDK. Instead, you can get xjc from the JAXB standalone libraries. Here’s how you can set it up for Java 17:
+
+1. Download JAXB Standalone (JAXB RI) for xjc
+Oracle provides the JAXB Reference Implementation (JAXB RI), which includes the xjc tool. You can download it from the official Eclipse Jakarta XML Binding project repository.
+
+Visit the JAXB RI GitHub Releases page.
+Download the latest release, which will be in the form of a .zip or .tar.gz file.
+Once downloaded, unzip the file. The xjc executable will be located inside the bin directory of the extracted files.
+
+2. Add xjc to Your PATH (Optional)
+If you want to run xjc from any terminal window, you can add its directory to your system's PATH.
+
+For example, on Unix-based systems:
+
+sh
+Copy code
+export PATH=$PATH:/path/to/jaxb-ri/bin
+3. Use xjc with Java 17
+Once the xjc executable is available, you can use it the same way you would in previous versions:
+
+sh
+Copy code
+xjc -d <output_directory> -p <package_name> <path_to_xsd>
+Replace <output_directory>, <package_name>, and <path_to_xsd> as per your requirements.
+
+Alternative: Using xjc via Maven with jaxb2-maven-plugin
+You can use xjc as part of your build process with jaxb2-maven-plugin. This approach does not require xjc to be installed on your system and is compatible with Java 17:
+
+Add the following to your pom.xml:
+
+xml
+Copy code
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>jaxb2-maven-plugin</artifactId>
+            <version>2.5.0</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>xjc</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <packageName>com.example.chequereader</packageName>
+                <schemaFiles>
+                    <schemaFile>${project.basedir}/src/main/resources/schema.xsd</schemaFile>
+                </schemaFiles>
+                <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+Run the following command to generate Java classes from the XSD:
+
+sh
+Copy code
+mvn clean install
+This approach allows xjc to run as part of your Maven build process, which is a good solution when working with Java 17.
+
+
+
+
+
+
+
