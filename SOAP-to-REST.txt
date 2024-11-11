@@ -439,6 +439,10 @@ Now, when you run mvn clean install, wsdl2java will generate Java classes from y
 3. Check the Generated Classes
 The generated classes will appear in the target/generated-sources folder. You can then use them directly in your Spring Boot application to create SOAP requests and parse responses.
 
+=======================
+mvn org.apache.cxf:cxf-tools-wsdlto-databinding-jaxb:3.5.5:wsdl2java -Dwsdlurl=file:src/main/resources/wsdl/WSMonetaryInstrument.wsdl
+
+
 
 
 
