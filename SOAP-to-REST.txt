@@ -156,3 +156,67 @@ soap.endpoint=https://xyz.com
 Now, start your Spring Boot application and test the endpoint by sending a POST request with JSON data to /cheques/image. This request should trigger the SOAP call and return the cheque image data.
 
 Let me know if you need help with further customization or handling SOAP responses.
+
+======================
+To use xjc to generate Java classes for your SOAP request and response XML structure, you’ll need an XML schema definition (XSD) for the SOAP service. The xjc tool can take this XSD and automatically generate Java classes for all elements and types defined in it.
+
+Steps to Use xjc for Your SOAP Request
+Obtain the WSDL/XSD File:
+
+Ideally, you should have a WSDL (Web Services Description Language) file for the SOAP endpoint. The WSDL file typically contains or links to the necessary XSD schema.
+You can obtain the WSDL from the SOAP endpoint (usually https://xyz.com?wsdl or a similar URL).
+If you already have an XSD file describing the request, you can use it directly with xjc.
+Generate Java Classes Using xjc:
+
+Open a terminal or command prompt.
+Run xjc with the WSDL or XSD file.
+sh
+Copy code
+xjc -d <output_directory> -p <package_name> <path_to_wsdl_or_xsd>
+Replace <output_directory> with the path to the folder where you want to save the generated Java classes.
+Replace <package_name> with the Java package name you want for the generated classes.
+Replace <path_to_wsdl_or_xsd> with the path to the WSDL or XSD file.
+Example:
+
+sh
+Copy code
+xjc -d src/main/java -p com.example.chequereader https://xyz.com?wsdl
+Add the Generated Classes to Your Project:
+
+After running xjc, you should see the generated Java classes in the specified output directory.
+Include these classes in your project (e.g., src/main/java/com/example/chequereader) to enable serialization and deserialization of SOAP messages.
+Use the Generated Classes in Your Spring Boot Application:
+
+You can now use these classes to construct SOAP requests and parse responses in your Spring Boot application.
+For example, you might create a GetCheckImageRequest object, populate its fields, and send it using your SoapClient.
+Using xjc in a Maven Build (Optional)
+If you want xjc to run automatically as part of your Maven build, you can use the jaxb2-maven-plugin:
+
+Add this to your pom.xml:
+
+xml
+Copy code
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>jaxb2-maven-plugin</artifactId>
+            <version>2.5.0</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>xjc</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <packageName>com.example.chequereader</packageName>
+                <schemaFiles>
+                    <schemaFile>${project.basedir}/src/main/resources/schema.xsd</schemaFile>
+                </schemaFiles>
+                <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+Replace schema.xsd with your WSDL or XSD file. Then, running mvn clean install will automatically generate the classes for you.
