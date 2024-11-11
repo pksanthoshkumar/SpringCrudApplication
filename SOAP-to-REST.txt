@@ -1,0 +1,158 @@
+To create a Spring Boot application to process SOAP requests for retrieving cheque images, you can follow these steps:
+
+1. Project Setup
+Set up a new Spring Boot project with the following dependencies:
+
+Spring Web Services (for SOAP support)
+JAXB (to handle XML binding)
+Spring Boot Starter Web
+You can add these dependencies in your pom.xml file if you're using Maven:
+
+xml
+Copy code
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.ws</groupId>
+        <artifactId>spring-ws-core</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web-services</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.ws</groupId>
+        <artifactId>spring-ws-security</artifactId>
+    </dependency>
+</dependencies>
+2. Create JAXB Classes
+Use JAXB to generate classes based on the SOAP XML structure. This will allow you to marshal and unmarshal the SOAP messages. You can use tools like xjc or create the classes manually.
+
+For simplicity, here’s an example JAXB class for the GetCheckImageRequest:
+
+java
+Copy code
+package com.example.chequereader.model;
+
+import javax.xml.bind.annotation.*;
+
+@XmlRootElement(name = "getCheckImageRequest", namespace = "http://your.namespace/here")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class GetCheckImageRequest {
+
+    @XmlElement(name = "requestHeader")
+    private RequestHeader requestHeader;
+
+    @XmlElement(name = "accountData")
+    private AccountData accountData;
+
+    @XmlElement(name = "serialNumber")
+    private String serialNumber;
+
+    @XmlElement(name = "includeBack")
+    private boolean includeBack;
+
+    @XmlElement(name = "amount")
+    private String amount;
+
+    @XmlElement(name = "checkIssueDate")
+    private String checkIssueDate;
+
+    @XmlElement(name = "documentImageNumber")
+    private String documentImageNumber;
+
+    // Getters and Setters...
+}
+Define similar classes for RequestHeader and AccountData.
+
+3. Create the SOAP Client
+Next, set up a SOAP client to make requests to the SOAP service.
+
+java
+Copy code
+package com.example.chequereader.client;
+
+import com.example.chequereader.model.GetCheckImageRequest;
+import org.springframework.ws.client.core.WebServiceTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class SoapClient {
+
+    private final WebServiceTemplate webServiceTemplate;
+
+    @Value("${soap.endpoint}")
+    private String soapEndpoint;
+
+    public SoapClient(WebServiceTemplate webServiceTemplate) {
+        this.webServiceTemplate = webServiceTemplate;
+    }
+
+    public Object getChequeImage(GetCheckImageRequest request) {
+        return webServiceTemplate.marshalSendAndReceive(soapEndpoint, request);
+    }
+}
+4. Configure SOAP WebServiceTemplate
+Configure WebServiceTemplate bean to be used by the SoapClient:
+
+java
+Copy code
+package com.example.chequereader.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.ws.transport.http.HttpComponentsMessageSender;
+import org.springframework.ws.client.core.WebServiceTemplate;
+
+@Configuration
+public class SoapConfig {
+
+    @Bean
+    public WebServiceTemplate webServiceTemplate() {
+        WebServiceTemplate template = new WebServiceTemplate();
+        template.setMessageSender(new HttpComponentsMessageSender());
+        return template;
+    }
+}
+5. Controller to Process the Request
+Now, create a REST endpoint to trigger the SOAP call.
+
+java
+Copy code
+package com.example.chequereader.controller;
+
+import com.example.chequereader.client.SoapClient;
+import com.example.chequereader.model.GetCheckImageRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/cheques")
+public class ChequeController {
+
+    private final SoapClient soapClient;
+
+    @Autowired
+    public ChequeController(SoapClient soapClient) {
+        this.soapClient = soapClient;
+    }
+
+    @PostMapping("/image")
+    public Object getChequeImage(@RequestBody GetCheckImageRequest request) {
+        return soapClient.getChequeImage(request);
+    }
+}
+6. Application Properties
+Add the SOAP endpoint URL to your application.properties file:
+
+properties
+Copy code
+soap.endpoint=https://xyz.com
+7. Run the Application
+Now, start your Spring Boot application and test the endpoint by sending a POST request with JSON data to /cheques/image. This request should trigger the SOAP call and return the cheque image data.
+
+Let me know if you need help with further customization or handling SOAP responses.
