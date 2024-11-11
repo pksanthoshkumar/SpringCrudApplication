@@ -148,3 +148,107 @@ public class CheckImageController {
     }
 }
 -------------------
+Here’s an improved approach using JAXB to marshal the response object to XML:
+
+1. Define a Response Object
+Create a response class to represent the XML response. This will allow JAXB to handle the marshalling.
+
+CheckImageResponse.java
+java
+Copy code
+package com.example.chequereadingapp.domain;
+
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "getCheckImageResponse")
+public class CheckImageResponse {
+    private String status;
+    private String message;
+    private byte[] chequeImage;  // Assuming images are returned as byte arrays in Base64
+
+    @XmlElement(name = "status")
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    @XmlElement(name = "message")
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+
+    @XmlElement(name = "chequeImage")
+    public byte[] getChequeImage() { return chequeImage; }
+    public void setChequeImage(byte[] chequeImage) { this.chequeImage = chequeImage; }
+}
+2. Modify CheckImageService to Return CheckImageResponse
+java
+Copy code
+package com.example.chequereadingapp.service;
+
+import com.example.chequereadingapp.domain.CheckImageRequest;
+import com.example.chequereadingapp.domain.CheckImageResponse;
+import org.springframework.stereotype.Service;
+import java.util.Base64;
+
+@Service
+public class CheckImageService {
+    public CheckImageResponse getCheckImage(CheckImageRequest request) {
+        CheckImageResponse response = new CheckImageResponse();
+        response.setStatus("SUCCESS");
+        response.setMessage("Cheque image retrieved successfully");
+
+        // Sample image data (e.g., in byte array). In a real application, load actual image data
+        byte[] imageData = Base64.getEncoder().encode("SampleImage".getBytes());
+        response.setChequeImage(imageData);
+
+        return response;
+    }
+}
+3. Modify the Controller to Return an XML Response
+In the controller, you should use JAXB to marshal the CheckImageResponse object back to XML.
+
+CheckImageController.java
+java
+Copy code
+package com.example.chequereadingapp.controller;
+
+import com.example.chequereadingapp.domain.CheckImageRequest;
+import com.example.chequereadingapp.domain.CheckImageResponse;
+import com.example.chequereadingapp.service.CheckImageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+import java.io.StringReader;
+import java.io.StringWriter;
+
+@RestController
+@RequestMapping("/soap")
+public class CheckImageController {
+
+    @Autowired
+    private CheckImageService checkImageService;
+
+    @PostMapping(value = "/getCheckImage", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
+    public String getCheckImage(@RequestBody String xmlRequest) throws JAXBException {
+        // Unmarshalling the request
+        JAXBContext requestContext = JAXBContext.newInstance(CheckImageRequest.class);
+        Unmarshaller unmarshaller = requestContext.createUnmarshaller();
+        CheckImageRequest request = (CheckImageRequest) unmarshaller.unmarshal(new StreamSource(new StringReader(xmlRequest)));
+
+        // Processing request through the service
+        CheckImageResponse response = checkImageService.getCheckImage(request);
+
+        // Marshalling the response to XML
+        JAXBContext responseContext = JAXBContext.newInstance(CheckImageResponse.class);
+        Marshaller marshaller = responseContext.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+        StringWriter sw = new StringWriter();
+        marshaller.marshal(response, sw);
+        return sw.toString();
+    }
+}
