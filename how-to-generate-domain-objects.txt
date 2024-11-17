@@ -1,1 +1,130 @@
 
+wsdl2java
+=========
+
+This is using -->apache-cxf-4.0.5\bin\wsdl2java
+
+wsdl2java  SampleWSDL.wsdl
+
+------------------------------------
+WSDL
+------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:tns="http://localhost/ws"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             targetNamespace="http://localhost/ws"
+             name="CheckImageService">
+
+    <!-- Types Section -->
+    <types>
+        <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                   targetNamespace="http://localhost/ws"
+                   elementFormDefault="qualified">
+            
+            <!-- Elements for the request and response -->
+            <xsd:element name="getCheckImageRequest">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="requestHeader" type="tns:RequestHeaderType"/>
+                        <xsd:element name="accountData" type="tns:AccountDataType"/>
+                        <xsd:element name="serialNumber" type="xsd:string"/>
+                        <xsd:element name="includeBack" type="xsd:boolean"/>
+                        <xsd:element name="amount" type="xsd:decimal"/>
+                        <xsd:element name="payeeName" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="checkIssueDate" type="xsd:date"/>
+                        <xsd:element name="documentImageNumber" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:complexType name="RequestHeaderType">
+                <xsd:sequence>
+                    <xsd:element name="requestId" type="xsd:string"/>
+                    <xsd:element name="requestUser" type="tns:RequestUserType"/>
+                    <xsd:element name="originatingService" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="RequestUserType">
+                <xsd:sequence>
+                    <xsd:element name="userId" type="xsd:string"/>
+                    <xsd:element name="data" type="tns:UserDataType"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="UserDataType">
+                <xsd:sequence>
+                    <xsd:element name="item" maxOccurs="unbounded">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="name" type="xsd:string"/>
+                                <xsd:element name="value" type="xsd:string"/>
+                            </xsd:sequence>
+                        </xsd:complexType>
+                    </xsd:element>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="AccountDataType">
+                <xsd:sequence>
+                    <xsd:element name="accountNumber" type="xsd:string"/>
+                    <xsd:element name="bankCode" type="xsd:string"/>
+                    <xsd:element name="accountType" type="xsd:string"/>
+                    <xsd:element name="accountSubType" type="xsd:string"/>
+                    <xsd:element name="ABA" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <!-- Response element -->
+            <xsd:element name="getCheckImageResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="imageUrl" type="xsd:string"/>
+                        <xsd:element name="imageFormat" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:schema>
+    </types>
+
+    <!-- Message Definitions -->
+    <message name="GetCheckImageRequest">
+        <part name="parameters" element="tns:getCheckImageRequest"/>
+    </message>
+
+    <message name="GetCheckImageResponse">
+        <part name="parameters" element="tns:getCheckImageResponse"/>
+    </message>
+
+    <!-- Port Type -->
+    <portType name="CheckImageServicePortType">
+        <operation name="GetCheckImage">
+            <input message="tns:GetCheckImageRequest"/>
+            <output message="tns:GetCheckImageResponse"/>
+        </operation>
+    </portType>
+
+    <!-- Binding -->
+    <binding name="CheckImageServiceBinding" type="tns:CheckImageServicePortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="GetCheckImage">
+            <soap:operation soapAction="http://localhost/ws/GetCheckImage"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+
+    <!-- Service -->
+    <service name="CheckImageService">
+        <port name="CheckImageServicePort" binding="tns:CheckImageServiceBinding">
+            <soap:address location="http://localhost:8080/ws"/>
+        </port>
+    </service>
+
+</definitions>
