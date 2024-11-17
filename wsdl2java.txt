@@ -5,6 +5,7 @@ wsdl2java
 This is using -->apache-cxf-4.0.5\bin\wsdl2java
 
 wsdl2java  SampleWSDL.wsdl
+wsdl2java  -p com.example.demo.domain SampleWSDL.wsdl
 
 ------------------------------------
 WSDL
