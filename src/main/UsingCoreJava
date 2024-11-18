@@ -1,1 +1,33 @@
 
+public class XmlParser {
+    public static void main(String[] args) {
+        String xml = "<requestHeader>\n" +
+                     "  <requestId>REQ123456</requestId>\n" +
+                     "  <requestUser>\n" +
+                     "      <userId>USER001</userId>\n" +
+                     "      <data>\n" +
+                     "          <item>\n" +
+                     "              <name>department</name>\n" +
+                     "              <value>banking</value>\n" +
+                     "          </item>\n" +
+                     "      </data>\n" +
+                     "  </requestUser>\n" +
+                     "  <originatingService>WEB</originatingService>\n" +
+                     "</requestHeader>";
+
+        String startTag = "<userId>";
+        String endTag = "</userId>";
+
+        String userId = extractValueBetweenTags(xml, startTag, endTag);
+        System.out.println("User ID: " + userId);
+    }
+
+    public static String extractValueBetweenTags(String text, String startTag, String endTag) {
+        int startIndex = text.indexOf(startTag) + startTag.length();
+        int endIndex = text.indexOf(endTag);
+        if (startIndex >= startTag.length() && endIndex > startIndex) {
+            return text.substring(startIndex, endIndex).trim();
+        }
+        return null; // or throw an exception if the tags are not found
+    }
+}
