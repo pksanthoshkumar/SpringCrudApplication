@@ -29,3 +29,47 @@ public class MyService {
                 .block(); // Blocking call for demonstration; consider using reactive streams in production.
     }
 }
+----------------------------------
+@Service
+public class MyService {
+
+    private final WebClient webClient;
+
+    @Autowired
+    public MyService(WebClient webClient) {
+        this.webClient = webClient;
+    }
+
+    public Mono<String> postJsonPayload(String jsonPayload) {
+        return webClient.post()
+                .uri("/some-endpoint") // Relative to baseUrl or full URL
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Specify JSON content type
+                .bodyValue(jsonPayload) // Set the JSON string as the body
+                .retrieve() // Trigger the HTTP call
+                .bodyToMono(String.class); // Map the response to a String
+    }
+}
+-----------------------------------------
+public void callService() {
+    String jsonPayload = "{\"name\": \"John Doe\", \"age\": 30}";
+
+    postJsonPayload(jsonPayload).subscribe(response -> {
+        System.out.println("Response: " + response);
+    });
+}
+-----------------------------------------
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public String createJsonPayload() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("name", "John Doe");
+    payload.put("age", 30);
+    return mapper.writeValueAsString(payload);
+}
+-------------------------------------
+String jsonPayload = createJsonPayload();
+postJsonPayload(jsonPayload).subscribe(response -> {
+    System.out.println("Response: " + response);
+});
+----------------------------
