@@ -184,3 +184,23 @@ Write to File (Solution 3):
 Ideal for downloading large files without keeping them in memory.
 Pick the solution that best suits your application's needs.
 ----------------------------
+@Configuration
+public class WebClientConfig {
+
+    @Bean
+    public WebClient webClient() {
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(10)) // Response timeout
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000); // Connection timeout
+
+        return WebClient.builder()
+                .baseUrl("https://example.com")
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(configurer -> configurer
+                                .defaultCodecs()
+                                .maxInMemorySize(10 * 1024 * 1024)) // Increase buffer size
+                        .build())
+                .build();
+    }
+}
