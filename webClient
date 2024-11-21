@@ -204,3 +204,35 @@ public class WebClientConfig {
                 .build();
     }
 }
+
+-------------------
+public class FileSaveUtility {
+
+    public static void saveBase64ImageToFile(String base64Data, String filePath) throws Exception {
+        byte[] imageData = Base64.getDecoder().decode(base64Data);
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            fos.write(imageData);
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        String base64Image = "BASE64_STRING_HERE"; // Replace with actual Base64 data
+        saveBase64ImageToFile(base64Image, "output_image.jpg"); // Save as JPEG
+    }
+}
+
+--------------------
+https://www.base64-image.de/
+---------------------------
+public Mono<Void> downloadImage(String endpoint, String filePath) {
+        Path path = Paths.get(filePath); // Destination file path
+
+        return webClient.post()
+                .uri(endpoint) // Endpoint that returns binary data
+                .retrieve()
+                .bodyToFlux(DataBuffer.class) // Stream binary data as DataBuffer
+                .flatMap(dataBuffer ->
+                        DataBufferUtils.write(Mono.just(dataBuffer), path)
+                                .doOnComplete(() -> DataBufferUtils.release(dataBuffer))) // Release buffer after writing
+                .then(); // Return Mono<Void> when complete
+    }
