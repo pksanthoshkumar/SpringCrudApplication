@@ -1,0 +1,31 @@
+@Configuration
+public class WebClientConfig {
+
+    @Bean
+    public WebClient webClient(AppProperties properties) {
+        return WebClient.builder()
+                .baseUrl(properties.getUrl()) // Retrieve URL from AppProperties
+                .build();
+    }
+}
+
+----------------------
+
+@Service
+public class MyService {
+
+    private final WebClient webClient;
+
+    @Autowired
+    public MyService(WebClient webClient) {
+        this.webClient = webClient;
+    }
+
+    public String fetchData() {
+        return webClient.get()
+                .uri("/some-endpoint")
+                .retrieve()
+                .bodyToMono(String.class)
+                .block(); // Blocking call for demonstration; consider using reactive streams in production.
+    }
+}
