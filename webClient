@@ -73,3 +73,30 @@ postJsonPayload(jsonPayload).subscribe(response -> {
     System.out.println("Response: " + response);
 });
 ----------------------------
+FIx Server cert.
+
+keytool -import -trustcacerts -file server-cert.pem -keystore $JAVA_HOME/lib/security/cacerts -alias your-server-alias
+
+--------------------
+Disable Certificate Validation in IntelliJ
+Go to Run/Debug Configurations:
+
+In IntelliJ, click on Run > Edit Configurations.
+Add JVM Options:
+
+In the VM Options field, add:
+text
+Copy code
+-Dcom.sun.net.ssl.checkRevocation=false -Djavax.net.ssl.trustStoreType=Dummy
+Save and Run:
+
+Save the configuration and run your application.
+----------------------
+Disable Certificate Validation via Command Line
+Add the following JVM option when running your application:
+
+bash
+Copy code
+-Dcom.sun.net.ssl.checkRevocation=false -Djavax.net.ssl.trustStoreType=Dummy
+This disables SSL certificate validation for the Java process.
+----------------------
