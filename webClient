@@ -100,3 +100,87 @@ Copy code
 -Dcom.sun.net.ssl.checkRevocation=false -Djavax.net.ssl.trustStoreType=Dummy
 This disables SSL certificate validation for the Java process.
 ----------------------
+
+Solution 1: Increase the Buffer Limit
+You can increase the buffer size in your WebClient configuration using the ExchangeStrategies class.
+
+Updated Configuration for WebClient
+java
+Copy code
+@Configuration
+public class WebClientConfig {
+
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder()
+                .baseUrl("https://xyzcompany.mtb.com") // Base URL for your API
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(configurer -> configurer
+                                .defaultCodecs()
+                                .maxInMemorySize(10 * 1024 * 1024) // Set limit to 10MB
+                        )
+                        .build()
+                )
+                .build();
+    }
+}
+The maxInMemorySize method allows you to set the buffer limit to a higher value (e.g., 10MB in this example). Adjust the size according to your needs.
+Solution 2: Stream the Response
+If the response is very large (e.g., multiple large images), it's better to stream the response instead of buffering it entirely in memory. You can use bodyToFlux to handle the response as a stream of data buffers.
+
+Example with Streaming
+java
+Copy code
+import org.springframework.core.io.buffer.DataBuffer;
+import reactor.core.publisher.Flux;
+
+public Flux<DataBuffer> postJsonPayloadStream(String jsonPayload) {
+    return webClient.post()
+            .uri("/cbs/v2/checks/check-images")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .bodyValue(jsonPayload)
+            .retrieve()
+            .bodyToFlux(DataBuffer.class); // Stream the response
+}
+Here, bodyToFlux(DataBuffer.class) streams the response as DataBuffer objects, which can be processed incrementally without exceeding memory limits.
+Use this approach when dealing with very large files or when the buffer size is unpredictable.
+Solution 3: Write Response to File (Optional)
+If you're fetching large binary data like images, you can directly write the response to a file instead of keeping it in memory.
+
+java
+Copy code
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+public Mono<Void> postJsonPayloadToFile(String jsonPayload, Path filePath) {
+    return webClient.post()
+            .uri("/cbs/v2/checks/check-images")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .bodyValue(jsonPayload)
+            .retrieve()
+            .bodyToFlux(DataBuffer.class)
+            .doOnNext(dataBuffer -> {
+                try {
+                    Files.write(filePath, dataBuffer.asByteBuffer().array(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                } catch (IOException e) {
+                    throw new RuntimeException("Error writing file", e);
+                }
+            })
+            .then(); // Return Mono<Void> when done
+}
+Replace filePath with the desired file location where the image will be saved.
+This approach avoids buffering large data in memory and writes directly to disk.
+Choosing the Right Approach
+Increase Buffer Limit (Solution 1):
+
+Use this if you know the response size and it fits comfortably in memory.
+Quick and easy for moderately large payloads.
+Stream Response (Solution 2):
+
+Recommended for very large responses, such as multiple high-resolution images.
+Write to File (Solution 3):
+
+Ideal for downloading large files without keeping them in memory.
+Pick the solution that best suits your application's needs.
+----------------------------
