@@ -33,3 +33,82 @@ https://qanda.digipres.org/398/is-multipage-tiff-an-acceptable-preservation-form
 https://www.mediagraph.io/blog/multi-part-conventional-images
 https://commons.apache.org/proper/commons-imaging/
 
+----------------------
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
+public class ByteToBufferedImage {
+    public static BufferedImage convert(byte[] imageBytes) throws IOException {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(imageBytes)) {
+            return ImageIO.read(bais);
+        }
+    }
+}
+-----------------------------
+public class MultiPartTiffFromBytes {
+
+    public static byte[] createMultiPartTiff(List<byte[]> imageStreams) throws IOException {
+        // Convert each byte stream to BufferedImage
+        List<BufferedImage> images = imageStreams.stream()
+                .map(bytes -> {
+                    try {
+                        return ByteToBufferedImage.convert(bytes);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error converting bytes to image", e);
+                    }
+                })
+                .toList();
+
+        // Output stream to hold the multi-part TIFF
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+            writer.setOutput(ios);
+
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            writer.prepareWriteSequence(null);
+
+            // Write each image to the TIFF sequence
+            for (BufferedImage image : images) {
+                writer.writeToSequence(new javax.imageio.IIOImage(image, null, null), param);
+            }
+
+            writer.endWriteSequence();
+        } finally {
+            writer.dispose();
+        }
+
+        // Return the final byte array
+        return baos.toByteArray();
+    }
+}
+--------------------------
+@RestController
+@RequestMapping("/api/tiff")
+public class TiffController {
+
+    @PostMapping("/create-from-bytes")
+    public ResponseEntity<String> createMultiPartTiff(@RequestBody List<byte[]> imageBytesList) {
+        try {
+            byte[] multiPartTiff = MultiPartTiffFromBytes.createMultiPartTiff(imageBytesList);
+
+            // Save to disk or return as a response
+            Files.write(Paths.get("multi-part.tiff"), multiPartTiff);
+            return ResponseEntity.ok("Multi-part TIFF created successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Failed to create TIFF: " + e.getMessage());
+        }
+    }
+}
+------------------------
+https://github.com/jai-imageio/jai-imageio-core
+https://commons.apache.org/proper/commons-imaging/
+
+<dependency>
+    <groupId>com.github.jai-imageio</groupId>
+    <artifactId>jai-imageio-core</artifactId>
+    <version>1.4.0</version>
+</dependency>
