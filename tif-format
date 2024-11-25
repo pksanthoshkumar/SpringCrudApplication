@@ -126,3 +126,53 @@ public class ByteToBufferedImage {
         }
     }
 }
+
+
+-----------------------------
+MultiPartTiffSplitter
+-------------------------------
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.Iterator;
+import javax.xml.bind.DatatypeConverter;
+
+public class MultiPartTiffSplitter {
+    public static void main(String[] args) throws Exception {
+        // Replace with your actual Base64-encoded TIFF string
+        String base64Tiff = "data:image/tiff;base64,SUkqAA==...";
+
+        // Step 1: Decode the Base64 string
+        byte[] tiffData = DatatypeConverter.parseBase64Binary(base64Tiff.split(",")[1]);
+
+        // Step 2: Create an ImageInputStream from the decoded data
+        try (InputStream is = new ByteArrayInputStream(tiffData);
+             ImageInputStream iis = ImageIO.createImageInputStream(is)) {
+
+            // Step 3: Get a TIFF reader
+            Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("TIFF");
+            if (!readers.hasNext()) {
+                throw new RuntimeException("No TIFF reader found. Make sure you have the TwelveMonkeys ImageIO plugin installed.");
+            }
+            ImageReader reader = readers.next();
+            reader.setInput(iis);
+
+            // Step 4: Extract and save each frame
+            int numPages = reader.getNumImages(true);  // Get the number of pages
+            for (int i = 0; i < numPages; i++) {
+                BufferedImage image = reader.read(i);  // Read each frame
+                File outputFile = new File("output_page_" + (i + 1) + ".png");
+                ImageIO.write(image, "PNG", outputFile);  // Save as PNG
+                System.out.println("Saved: " + outputFile.getAbsolutePath());
+            }
+        }
+    }
+}
+-------------------------
+<dependency>
+    <groupId>com.twelvemonkeys.imageio</groupId>
+    <artifactId>imageio-tiff</artifactId>
+    <version>3.9.4</version>
+</dependency>
