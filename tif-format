@@ -136,41 +136,46 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.Base64;
 import java.util.Iterator;
-import javax.xml.bind.DatatypeConverter;
 
-public class MultiPartTiffSplitter {
-    public static void main(String[] args) throws Exception {
-        // Replace with your actual Base64-encoded TIFF string
-        String base64Tiff = "data:image/tiff;base64,SUkqAA==...";
+public class MultiPageTiffProcessor {
 
-        // Step 1: Decode the Base64 string
-        byte[] tiffData = DatatypeConverter.parseBase64Binary(base64Tiff.split(",")[1]);
+    public static void main(String[] args) throws IOException {
+        // Base64 string representing a multi-page TIFF
+        String base64MultiPageTiff = "BASE64_STRING_REPRESENTING_MULTIPAGE_TIFF";
 
-        // Step 2: Create an ImageInputStream from the decoded data
-        try (InputStream is = new ByteArrayInputStream(tiffData);
-             ImageInputStream iis = ImageIO.createImageInputStream(is)) {
+        // Decode the Base64 string
+        byte[] tiffData = Base64.getDecoder().decode(base64MultiPageTiff);
 
-            // Step 3: Get a TIFF reader
+        // Create an ImageInputStream from the byte array
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(tiffData);
+             ImageInputStream imageInputStream = ImageIO.createImageInputStream(byteArrayInputStream)) {
+
+            // Get a TIFF ImageReader
             Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("TIFF");
             if (!readers.hasNext()) {
-                throw new RuntimeException("No TIFF reader found. Make sure you have the TwelveMonkeys ImageIO plugin installed.");
+                throw new IllegalStateException("No TIFF readers found. Ensure TwelveMonkeys ImageIO is on the classpath.");
             }
             ImageReader reader = readers.next();
-            reader.setInput(iis);
+            reader.setInput(imageInputStream);
 
-            // Step 4: Extract and save each frame
-            int numPages = reader.getNumImages(true);  // Get the number of pages
+            // Process each page in the multi-page TIFF
+            int numPages = reader.getNumImages(true);
+            System.out.println("Number of pages: " + numPages);
+
             for (int i = 0; i < numPages; i++) {
-                BufferedImage image = reader.read(i);  // Read each frame
-                File outputFile = new File("output_page_" + (i + 1) + ".png");
-                ImageIO.write(image, "PNG", outputFile);  // Save as PNG
+                BufferedImage page = reader.read(i);
+
+                // Save each page as a separate file (example: PNG format)
+                File outputFile = new File("output/page_" + (i + 1) + ".png");
+                ImageIO.write(page, "PNG", outputFile);
                 System.out.println("Saved: " + outputFile.getAbsolutePath());
             }
         }
     }
 }
--------------------------
+
 <dependency>
     <groupId>com.twelvemonkeys.imageio</groupId>
     <artifactId>imageio-tiff</artifactId>
