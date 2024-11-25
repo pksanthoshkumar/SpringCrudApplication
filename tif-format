@@ -176,3 +176,7 @@ public class MultiPartTiffSplitter {
     <artifactId>imageio-tiff</artifactId>
     <version>3.9.4</version>
 </dependency>
+
+https://www.iditect.com/program-example/splitting-a-multipage-tiff-image-into-individual-images-java.html
+https://github.com/haraldk/TwelveMonkeys/tree/tiff-refactor-webp-support
+https://haraldk.github.io/TwelveMonkeys/
