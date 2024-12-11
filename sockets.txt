@@ -1,0 +1,104 @@
+@Component
+public class SocketServer implements CommandLineRunner {
+
+    private static final int PORT = 9090;
+
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("Starting Socket Server...");
+
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Socket Server started on port " + PORT);
+
+            while (true) {
+                // Accept an incoming connection
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connected!");
+
+                // Handle the connection in a separate thread
+                new Thread(() -> handleClient(clientSocket)).start();
+            }
+        }
+    }
+
+    private void handleClient(Socket clientSocket) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+            // Read the request from the client
+            String request = in.readLine();
+            System.out.println("Received request: " + request);
+
+            // Simulate handling different types of requests
+            String response;
+            if (request.equalsIgnoreCase("LOGIN")) {
+                response = "TOKEN:12345";
+            } else if (request.startsWith("INQUIRY")) {
+                response = "INQUIRY_RESULT:SUCCESS";
+            } else if (request.equalsIgnoreCase("LOGOUT")) {
+                response = "LOGOUT:SUCCESS";
+            } else {
+                response = "ERROR:UNKNOWN_REQUEST";
+            }
+
+            // Send the response back to the client
+            out.println(response);
+            System.out.println("Sent response: " + response);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+------------------------
+
+@Component
+public class SocketServer implements CommandLineRunner {
+
+    private static final int PORT = 9090;
+
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("Starting Socket Server...");
+
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Socket Server started on port " + PORT);
+
+            while (true) {
+                // Accept an incoming connection
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connected!");
+
+                // Handle the connection in a separate thread
+                new Thread(() -> handleClient(clientSocket)).start();
+            }
+        }
+    }
+
+    private void handleClient(Socket clientSocket) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+            // Read the request from the client
+            String request = in.readLine();
+            System.out.println("Received request: " + request);
+
+            // Simulate handling different types of requests
+            String response;
+            if (request.equalsIgnoreCase("LOGIN")) {
+                response = "TOKEN:12345";
+            } else if (request.startsWith("INQUIRY")) {
+                response = "INQUIRY_RESULT:SUCCESS";
+            } else if (request.equalsIgnoreCase("LOGOUT")) {
+                response = "LOGOUT:SUCCESS";
+            } else {
+                response = "ERROR:UNKNOWN_REQUEST";
+            }
+
+            // Send the response back to the client
+            out.println(response);
+            System.out.println("Sent response: " + response);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
