@@ -1,0 +1,66 @@
+import java.io.IOException;
+
+public class CTAService {
+
+    public void getCTAImages() {
+        // Code to create a socket connection here
+
+        // Send a login request
+        sendRequest();
+
+        // Use the retry mechanism to read the buffer
+        Object response = retry(this::readBuffer, 3, 500);
+
+        if (response == null) {
+            System.err.println("Failed to read buffer after maximum retries.");
+        } else {
+            System.out.println("Successfully read buffer.");
+        }
+    }
+
+    private Object sendRequest() {
+        // Code to send the request
+        return new Object();
+    }
+
+    private Object readBuffer() throws IOException {
+        // Code to read the buffer; simulate potential exception
+        // Return null or throw IOException to simulate failure
+        return new Object(); // Simulate successful read
+    }
+
+    /**
+     * Generic retry mechanism.
+     *
+     * @param action        The action to retry (a functional interface).
+     * @param maxRetries    The maximum number of retry attempts.
+     * @param waitTimeInMs  The delay between retries in milliseconds.
+     * @param <T>           The return type of the action.
+     * @return The result of the action if successful, or null if all retries fail.
+     */
+    private <T> T retry(Retryable<T> action, int maxRetries, long waitTimeInMs) {
+        int retryCount = 0;
+        while (retryCount < maxRetries) {
+            try {
+                return action.execute();
+            } catch (Exception e) {
+                System.err.println("Attempt " + (retryCount + 1) + " failed: " + e.getMessage());
+            }
+
+            retryCount++;
+            try {
+                Thread.sleep(waitTimeInMs);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                System.err.println("Retry interrupted.");
+                break;
+            }
+        }
+        return null;
+    }
+
+    @FunctionalInterface
+    public interface Retryable<T> {
+        T execute() throws Exception;
+    }
+}
