@@ -3,17 +3,18 @@ import java.io.IOException;
 public class CTAService {
 
     public void getCTAImages() {
-        // Code to create a socket connection
-        SocketConnection socketConnection = new SocketConnection(); // Example placeholder
-        ReadBuffer readBuffer = new ReadBuffer(); // Example placeholder
+        // Example setup for arguments
+        SocketConnection socketConnection = new SocketConnection(); // Placeholder
+        ReadBuffer readBuffer = new ReadBuffer(); // Placeholder
         int bufferSize = 1024;
         String terminationString = "\n";
 
-        // Use the retry mechanism to read the buffer
+        // Retry only on NoDataFoundException
         Object response = retry(
             () -> readBuffer(socketConnection, readBuffer, bufferSize, terminationString),
             3,
-            500
+            500,
+            NoDataFoundException.class
         );
 
         if (response == null) {
@@ -28,29 +29,41 @@ public class CTAService {
         return new Object();
     }
 
-    private Object readBuffer(SocketConnection socketConnection, ReadBuffer readBuffer, int bufferSize, String terminationString) throws IOException {
+    private Object readBuffer(SocketConnection socketConnection, ReadBuffer readBuffer, int bufferSize, String terminationString) throws IOException, NoDataFoundException {
         // Code to read the buffer with provided arguments
         System.out.println("Reading buffer with termination string: " + terminationString);
-        // Simulate successful read
-        return new Object(); 
+
+        // Simulate a scenario where no data is found
+        if (Math.random() < 0.5) { // 50% chance of throwing an exception
+            throw new NoDataFoundException("No data found in the buffer.");
+        }
+
+        return new Object(); // Simulate successful read
     }
 
     /**
-     * Generic retry mechanism.
+     * Generic retry mechanism that retries only on specific exceptions.
      *
      * @param action        The action to retry (a functional interface).
      * @param maxRetries    The maximum number of retry attempts.
      * @param waitTimeInMs  The delay between retries in milliseconds.
+     * @param retryOn       The specific exception type to retry on.
      * @param <T>           The return type of the action.
+     * @param <E>           The type of exception to retry on.
      * @return The result of the action if successful, or null if all retries fail.
      */
-    private <T> T retry(Retryable<T> action, int maxRetries, long waitTimeInMs) {
+    private <T, E extends Exception> T retry(Retryable<T> action, int maxRetries, long waitTimeInMs, Class<E> retryOn) {
         int retryCount = 0;
         while (retryCount < maxRetries) {
             try {
                 return action.execute();
             } catch (Exception e) {
-                System.err.println("Attempt " + (retryCount + 1) + " failed: " + e.getMessage());
+                if (retryOn.isInstance(e)) {
+                    System.err.println("Attempt " + (retryCount + 1) + " failed: " + e.getMessage());
+                } else {
+                    // If the exception is not of the specified type, rethrow it
+                    throw new RuntimeException("Non-retryable exception occurred: " + e.getMessage(), e);
+                }
             }
 
             retryCount++;
@@ -77,5 +90,11 @@ public class CTAService {
 
     public static class ReadBuffer {
         // Placeholder for buffer class
+    }
+
+    public static class NoDataFoundException extends Exception {
+        public NoDataFoundException(String message) {
+            super(message);
+        }
     }
 }
