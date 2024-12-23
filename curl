@@ -1,0 +1,15 @@
+curl --location 'http://localhost:8081/imageretrieval/cta-check-images' \
+--header 'Content-Type: application/json' \
+--data '{
+  "accountNumber": "98322",
+  "checks": [
+    {
+      "postedDate": "2024-03-18",
+      "checkNumber": "47172569"
+    },
+    {
+      "checkNumber": "47093064",
+      "postedDate": "2024-03-18"
+    }
+  ]
+}'
