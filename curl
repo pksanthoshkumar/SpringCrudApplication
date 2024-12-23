@@ -22,3 +22,75 @@ logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n
 # Rolling policy to limit log file size and history
 logging.file.max-size=10MB
 logging.file.max-history=7 # Retain up to 7 log files
+======================
+@ExtendWith(MockitoExtension.class)
+class ServiceTest {
+
+    @Mock
+    private WebClient webClient;
+
+    @Mock
+    private mtProcessor mtProcessor;
+
+    @InjectMocks
+    private Service service;
+
+    @Test
+    void testGetCheckImage_withValidRequest() throws JsonProcessingException {
+        // Arrange
+        MIReq request = new MIReq();
+        request.setCheckNumber("123456");
+        WebClient.RequestBodyUriSpec uriSpecMock = Mockito.mock(WebClient.RequestBodyUriSpec.class);
+        WebClient.RequestBodySpec bodySpecMock = Mockito.mock(WebClient.RequestBodySpec.class);
+        WebClient.ResponseSpec responseSpecMock = Mockito.mock(WebClient.ResponseSpec.class);
+
+        when(webClient.post()).thenReturn(uriSpecMock);
+        when(uriSpecMock.uri(anyString())).thenReturn(bodySpecMock);
+        when(bodySpecMock.header(anyString(), anyString())).thenReturn(bodySpecMock);
+        when(bodySpecMock.bodyValue(anyString())).thenReturn(bodySpecMock);
+        when(bodySpecMock.retrieve()).thenReturn(responseSpecMock);
+        when(responseSpecMock.bodyToMono(Response.class))
+                .thenReturn(Mono.just(new Response()));
+
+        // Act
+        String result = service.getCheckImage(request);
+
+        // Assert
+        assertNotNull(result);
+        verify(webClient, times(1)).post();
+    }
+
+    @Test
+    void testGetCheckImage_whenExceptionOccurs() {
+        // Arrange
+        MIReq request = new MIReq();
+        request.setCheckNumber("123456");
+
+        when(webClient.post()).thenThrow(new RuntimeException("WebClient error"));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> service.getCheckImage(request));
+    }
+
+    @Test
+    void testGetCheckData_withValidResponse() {
+        // Arrange
+        WebClient.RequestBodyUriSpec uriSpecMock = Mockito.mock(WebClient.RequestBodyUriSpec.class);
+        WebClient.RequestBodySpec bodySpecMock = Mockito.mock(WebClient.RequestBodySpec.class);
+        WebClient.ResponseSpec responseSpecMock = Mockito.mock(WebClient.ResponseSpec.class);
+
+        when(webClient.post()).thenReturn(uriSpecMock);
+        when(uriSpecMock.uri(anyString())).thenReturn(bodySpecMock);
+        when(bodySpecMock.header(anyString(), anyString())).thenReturn(bodySpecMock);
+        when(bodySpecMock.bodyValue(anyString())).thenReturn(bodySpecMock);
+        when(bodySpecMock.retrieve()).thenReturn(responseSpecMock);
+        when(responseSpecMock.bodyToMono(CheckImagesResponse.class))
+                .thenReturn(Mono.just(new CheckImagesResponse()));
+
+        // Act
+        Mono<CheckImagesResponse> response = service.getCheckData("testPayload");
+
+        // Assert
+        assertNotNull(response);
+    }
+}
