@@ -13,3 +13,23 @@ curl --location 'http://localhost:8081/imageretrieval/cta-check-images' \
     }
   ]
 }'
+===========================
+# Enable the active profile
+spring.profiles.active=dev
+
+# Logging level
+logging.level.root=INFO
+logging.level.com.example=DEBUG # Adjust package-level logging for your application
+
+# Log file output location
+logging.file.name=logs/application-dev.log
+
+# Log pattern for console output
+logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n
+
+# Log pattern for file output
+logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n
+
+# Rolling policy to limit log file size and history
+logging.file.max-size=10MB
+logging.file.max-history=7 # Retain up to 7 log files
