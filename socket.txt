@@ -1,0 +1,24 @@
+ @Test
+    void testGetResponse() throws Exception {
+        // Arrange
+        GTAImageService service = new GTAImageService();
+
+        // Mock dependencies
+        Socket mockSocket = mock(Socket.class);
+        PrintWriter mockPrintWriter = mock(PrintWriter.class);
+        BufferedReader mockBufferedReader = mock(BufferedReader.class);
+
+         // Mock socket setup
+        when(mockSocket.getOutputStream()).thenReturn(System.out);
+        when(mockSocket.getInputStream()).thenReturn(new StringReader("mocked server response").toString().getBytes());
+
+        // Mock BufferedReader behavior
+        when(mockBufferedReader.readLine()).thenReturn("mocked response");
+
+        verify(mockPrintWriter, times(1)).println(anyString());
+        verify(mockBufferedReader, atLeastOnce()).readLine();
+
+        assertNotNull(result);
+        assertEquals("expected response", result.getSomeField());
+
+        }
