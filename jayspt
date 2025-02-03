@@ -1,0 +1,25 @@
+import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
+import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class JasyptConfig {
+
+    @Bean
+    public PooledPBEStringEncryptor stringEncryptor() {
+        PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
+        SimpleStringPBEConfig config = new SimpleStringPBEConfig();
+        config.setPassword(System.getenv("JASYPT_ENCRYPTOR_PASSWORD"));  // Ensure the password is correct
+        config.setAlgorithm("PBEWITHHMACSHA512ANDAES_256"); // Must match encryption algorithm
+        config.setKeyObtentionIterations("1000"); // Same as used during encryption
+        config.setPoolSize("1");
+        config.setSaltGeneratorClassName("org.jasypt.salt.RandomSaltGenerator"); // Same salt generator
+        config.setIvGeneratorClassName("org.jasypt.iv.RandomIvGenerator"); // Same IV generator
+        config.setStringOutputType("base64"); // Ensures proper string encoding
+        encryptor.setConfig(config);
+        return encryptor;
+    }
+}
+
+java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input="mySecretPassword" password="mySecretKey" algorithm=PBEWITHHMACSHA512ANDAES_256" stringOutputType=base64
