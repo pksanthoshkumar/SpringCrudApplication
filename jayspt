@@ -23,3 +23,26 @@ public class JasyptConfig {
 }
 
 java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input="mySecretPassword" password="mySecretKey" algorithm=PBEWITHHMACSHA512ANDAES_256" stringOutputType=base64
+
+
+public class SupportedAlgorithms {
+    public static void main(String[] args) {
+        Set<String> algorithms = Security.getAlgorithms("Cipher");
+        System.out.println("Available algorithms:");
+        for (String algorithm : algorithms) {
+            System.out.println(algorithm);
+        }
+    }
+}
+-------------------------
+Commonly Supported PBE Algorithms
+Algorithm Name	Strength	Notes
+PBEWithMD5AndDES	Weak	Fast but insecure (legacy use only)
+PBEWithSHA1AndDESede	Medium	Uses Triple DES
+PBEWithSHA1AndRC2_40	Medium	Not recommended due to RC2 weaknesses
+PBEWithSHA256And128BitAES-CBC-BC	Strong	Uses AES (128-bit) in CBC mode
+PBEWithSHA256And192BitAES-CBC-BC	Strong	Uses AES (192-bit) in CBC mode
+PBEWithSHA256And256BitAES-CBC-BC	Strong	Uses AES (256-bit) in CBC mode
+PBEWithHmacSHA512AndAES_128	Strong	More secure and recommended
+PBEWithHmacSHA512AndAES_256	Very Strong	May not work in some environments without proper JCE
+
